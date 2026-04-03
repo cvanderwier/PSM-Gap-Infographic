@@ -1,0 +1,746 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>GVB Biopharma – PSM Gap Analysis</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap');
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  body {
+    font-family: 'Inter', -apple-system, sans-serif;
+    background: #0A1628;
+    color: #E2E8F0;
+    min-height: 100vh;
+  }
+
+  .page {
+    max-width: 1400px;
+    margin: 0 auto;
+    padding: 40px 32px;
+  }
+
+  /* HEADER */
+  .header {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    margin-bottom: 40px;
+    padding-bottom: 28px;
+    border-bottom: 2px solid #1E3A5F;
+  }
+  .header-left h1 {
+    font-size: 32px;
+    font-weight: 800;
+    color: #FFFFFF;
+    letter-spacing: -0.5px;
+    line-height: 1.1;
+  }
+  .header-left h1 span { color: #40916C; }
+  .header-left .subtitle {
+    font-size: 15px;
+    color: #94A3B8;
+    margin-top: 8px;
+    font-weight: 400;
+  }
+  .header-right {
+    text-align: right;
+    font-size: 13px;
+    color: #64748B;
+    line-height: 1.8;
+  }
+  .header-right strong { color: #94A3B8; }
+
+  /* SUMMARY CARDS */
+  .summary-row {
+    display: grid;
+    grid-template-columns: repeat(5, 1fr);
+    gap: 16px;
+    margin-bottom: 36px;
+  }
+  .summary-card {
+    background: #111D32;
+    border-radius: 12px;
+    padding: 20px;
+    border: 1px solid #1E3A5F;
+    text-align: center;
+  }
+  .summary-card .number {
+    font-size: 40px;
+    font-weight: 800;
+    line-height: 1;
+  }
+  .summary-card .label {
+    font-size: 12px;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.8px;
+    margin-top: 8px;
+    color: #94A3B8;
+  }
+  .card-critical .number { color: #EF4444; }
+  .card-high .number { color: #F97316; }
+  .card-medium .number { color: #EAB308; }
+  .card-low .number { color: #22C55E; }
+  .card-overall .number { color: #3B82F6; }
+
+  /* OVERALL PROGRESS BAR */
+  .overall-bar-wrap {
+    background: #111D32;
+    border-radius: 12px;
+    padding: 20px 24px;
+    margin-bottom: 36px;
+    border: 1px solid #1E3A5F;
+  }
+  .overall-bar-wrap .bar-label {
+    display: flex;
+    justify-content: space-between;
+    font-size: 13px;
+    font-weight: 600;
+    color: #94A3B8;
+    margin-bottom: 10px;
+  }
+  .overall-bar-wrap .bar-label span:last-child { color: #3B82F6; font-size: 18px; font-weight: 800; }
+  .progress-track {
+    height: 18px;
+    background: #1E293B;
+    border-radius: 9px;
+    overflow: hidden;
+    position: relative;
+  }
+  .progress-fill {
+    height: 100%;
+    border-radius: 9px;
+    background: linear-gradient(90deg, #EF4444 0%, #F97316 30%, #EAB308 60%, #22C55E 100%);
+    width: 35%;
+    transition: width 1.5s ease;
+  }
+
+  /* CHAPTER GRID */
+  .chapters-title {
+    font-size: 20px;
+    font-weight: 700;
+    color: #FFFFFF;
+    margin-bottom: 20px;
+  }
+  .chapter-grid {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 16px;
+    margin-bottom: 40px;
+  }
+
+  .chapter-card {
+    background: #111D32;
+    border-radius: 12px;
+    padding: 20px;
+    border-left: 4px solid;
+    border-top: 1px solid #1E3A5F;
+    border-right: 1px solid #1E3A5F;
+    border-bottom: 1px solid #1E3A5F;
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+  }
+  .chapter-card.critical { border-left-color: #EF4444; }
+  .chapter-card.high { border-left-color: #F97316; }
+  .chapter-card.medium { border-left-color: #EAB308; }
+  .chapter-card.low { border-left-color: #22C55E; }
+
+  .ch-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+  }
+  .ch-num {
+    font-size: 11px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    padding: 3px 10px;
+    border-radius: 4px;
+    display: inline-block;
+  }
+  .critical .ch-num { background: rgba(239,68,68,0.15); color: #EF4444; }
+  .high .ch-num { background: rgba(249,115,22,0.15); color: #F97316; }
+  .medium .ch-num { background: rgba(234,179,8,0.15); color: #EAB308; }
+  .low .ch-num { background: rgba(34,197,94,0.15); color: #22C55E; }
+
+  .ch-title {
+    font-size: 16px;
+    font-weight: 700;
+    color: #FFFFFF;
+  }
+
+  .ch-severity {
+    font-size: 11px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    padding: 3px 10px;
+    border-radius: 4px;
+  }
+  .sev-critical { background: #EF4444; color: #FFF; }
+  .sev-high { background: #F97316; color: #FFF; }
+  .sev-medium { background: #EAB308; color: #1A1A00; }
+  .sev-low { background: #22C55E; color: #003300; }
+
+  .ch-bar-wrap {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+  .ch-bar-track {
+    flex: 1;
+    height: 8px;
+    background: #1E293B;
+    border-radius: 4px;
+    overflow: hidden;
+  }
+  .ch-bar-fill {
+    height: 100%;
+    border-radius: 4px;
+    transition: width 1s ease;
+  }
+  .critical .ch-bar-fill { background: #EF4444; }
+  .high .ch-bar-fill { background: #F97316; }
+  .medium .ch-bar-fill { background: #EAB308; }
+  .low .ch-bar-fill { background: #22C55E; }
+  .ch-bar-pct {
+    font-size: 14px;
+    font-weight: 700;
+    min-width: 40px;
+    text-align: right;
+  }
+  .critical .ch-bar-pct { color: #EF4444; }
+  .high .ch-bar-pct { color: #F97316; }
+  .medium .ch-bar-pct { color: #EAB308; }
+  .low .ch-bar-pct { color: #22C55E; }
+
+  .ch-details {
+    font-size: 12px;
+    color: #94A3B8;
+    line-height: 1.6;
+  }
+  .ch-details .gap-item {
+    display: flex;
+    align-items: flex-start;
+    gap: 6px;
+    margin-bottom: 4px;
+  }
+  .gap-icon { flex-shrink: 0; margin-top: 2px; }
+  .gap-icon.has { color: #22C55E; }
+  .gap-icon.needs { color: #EF4444; }
+
+  .ch-sources {
+    font-size: 11px;
+    color: #64748B;
+    padding-top: 8px;
+    border-top: 1px solid #1E293B;
+  }
+  .ch-sources strong { color: #94A3B8; }
+
+  /* LEGEND */
+  .legend-row {
+    display: flex;
+    gap: 24px;
+    justify-content: center;
+    margin-bottom: 40px;
+  }
+  .legend-item {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 12px;
+    font-weight: 600;
+    color: #94A3B8;
+  }
+  .legend-dot {
+    width: 12px;
+    height: 12px;
+    border-radius: 3px;
+  }
+
+  /* PRIORITY TIMELINE */
+  .timeline-section {
+    background: #111D32;
+    border-radius: 12px;
+    padding: 28px;
+    border: 1px solid #1E3A5F;
+    margin-bottom: 36px;
+  }
+  .timeline-title {
+    font-size: 18px;
+    font-weight: 700;
+    color: #FFFFFF;
+    margin-bottom: 20px;
+  }
+  .timeline-phases {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 16px;
+  }
+  .phase {
+    padding: 16px;
+    border-radius: 8px;
+    background: #0A1628;
+    border: 1px solid #1E3A5F;
+  }
+  .phase-label {
+    font-size: 11px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    margin-bottom: 4px;
+  }
+  .phase-1 .phase-label { color: #EF4444; }
+  .phase-2 .phase-label { color: #F97316; }
+  .phase-3 .phase-label { color: #EAB308; }
+  .phase-window {
+    font-size: 13px;
+    font-weight: 600;
+    color: #FFFFFF;
+    margin-bottom: 10px;
+  }
+  .phase-items {
+    font-size: 12px;
+    color: #94A3B8;
+    line-height: 1.8;
+  }
+
+  /* FOOTER */
+  .footer {
+    text-align: center;
+    font-size: 11px;
+    color: #475569;
+    padding-top: 20px;
+    border-top: 1px solid #1E3A5F;
+  }
+
+  @media print {
+    body { background: #FFF; color: #1A1A1A; }
+    .page { padding: 20px; }
+  }
+</style>
+</head>
+<body>
+<div class="page">
+
+  <!-- HEADER -->
+  <div class="header">
+    <div class="header-left">
+      <h1><span>GVB BIOPHARMA</span> PSM Program<br>Gap Analysis</h1>
+      <div class="subtitle">29 CFR 1910.119 / OR-OSHA Division 2/H &mdash; Prineville Campus</div>
+    </div>
+    <div class="header-right">
+      <strong>Assessment Date:</strong> April 2, 2026<br>
+      <strong>Prepared By:</strong> Chris VanderWier<br>
+      <strong>Facility:</strong> 1948 N Main St, Prineville OR 97754<br>
+      <strong>Covered Processes:</strong> Ethanol Extraction &bull; Heptane Isolation
+    </div>
+  </div>
+
+  <!-- SUMMARY CARDS -->
+  <div class="summary-row">
+    <div class="summary-card card-critical">
+      <div class="number">1</div>
+      <div class="label">Critical Gap</div>
+    </div>
+    <div class="summary-card card-high">
+      <div class="number">5</div>
+      <div class="label">High Gaps</div>
+    </div>
+    <div class="summary-card card-medium">
+      <div class="number">6</div>
+      <div class="label">Medium Gaps</div>
+    </div>
+    <div class="summary-card card-low">
+      <div class="number">2</div>
+      <div class="label">Low Gaps</div>
+    </div>
+    <div class="summary-card card-overall">
+      <div class="number">35%</div>
+      <div class="label">Overall Readiness</div>
+    </div>
+  </div>
+
+  <!-- OVERALL BAR -->
+  <div class="overall-bar-wrap">
+    <div class="bar-label">
+      <span>OVERALL PSM PROGRAM COMPLETION</span>
+      <span>35%</span>
+    </div>
+    <div class="progress-track">
+      <div class="progress-fill"></div>
+    </div>
+  </div>
+
+  <!-- LEGEND -->
+  <div class="legend-row">
+    <div class="legend-item"><div class="legend-dot" style="background:#EF4444"></div>CRITICAL &mdash; No program exists, immediate action required</div>
+    <div class="legend-item"><div class="legend-dot" style="background:#F97316"></div>HIGH &mdash; Framework only, major gaps in implementation</div>
+    <div class="legend-item"><div class="legend-dot" style="background:#EAB308"></div>MEDIUM &mdash; Partial data exists, needs formalization</div>
+    <div class="legend-item"><div class="legend-dot" style="background:#22C55E"></div>LOW &mdash; Strong foundation, minor documentation gaps</div>
+  </div>
+
+  <!-- 14 CHAPTER CARDS -->
+  <div class="chapters-title">14 PSM Elements &mdash; Chapter-by-Chapter Assessment</div>
+  <div class="chapter-grid">
+
+    <!-- CH1 Employee Participation -->
+    <div class="chapter-card high">
+      <div class="ch-header">
+        <div><div class="ch-num">GVB-PSM-001</div></div>
+        <div class="ch-severity sev-high">HIGH</div>
+      </div>
+      <div class="ch-title">Ch 1: Employee Participation</div>
+      <div class="ch-bar-wrap">
+        <div class="ch-bar-track"><div class="ch-bar-fill" style="width:25%"></div></div>
+        <div class="ch-bar-pct">25%</div>
+      </div>
+      <div class="ch-details">
+        <div class="gap-item"><span class="gap-icon has">&#10003;</span> Safety committee exists with meeting minutes</div>
+        <div class="gap-item"><span class="gap-icon has">&#10003;</span> Written action plan established (GVB-PSM-001)</div>
+        <div class="gap-item"><span class="gap-icon needs">&#10007;</span> No documented employee consultation on PHAs</div>
+        <div class="gap-item"><span class="gap-icon needs">&#10007;</span> No PSM participation log or sign-off records</div>
+        <div class="gap-item"><span class="gap-icon needs">&#10007;</span> No process for access to PSI documentation</div>
+      </div>
+      <div class="ch-sources"><strong>Source Data:</strong> Safety Committee files, Safety Meeting sign-ins 2025/2026</div>
+    </div>
+
+    <!-- CH2 Process Safety Information -->
+    <div class="chapter-card medium">
+      <div class="ch-header">
+        <div><div class="ch-num">GVB-PSM-002</div></div>
+        <div class="ch-severity sev-medium">MEDIUM</div>
+      </div>
+      <div class="ch-title">Ch 2: Process Safety Information</div>
+      <div class="ch-bar-wrap">
+        <div class="ch-bar-track"><div class="ch-bar-fill" style="width:50%"></div></div>
+        <div class="ch-bar-pct">50%</div>
+      </div>
+      <div class="ch-details">
+        <div class="gap-item"><span class="gap-icon has">&#10003;</span> SDS library maintained (ethanol, heptane, all chemicals)</div>
+        <div class="gap-item"><span class="gap-icon has">&#10003;</span> Equipment manuals on file (Extraction + Isolation)</div>
+        <div class="gap-item"><span class="gap-icon has">&#10003;</span> P&amp;IDs available for Isolation (Saw Shop)</div>
+        <div class="gap-item"><span class="gap-icon has">&#10003;</span> Engineering sets from Jensen Hughes, Eclipse, R&amp;W</div>
+        <div class="gap-item"><span class="gap-icon needs">&#10007;</span> No consolidated PSI register linking all data</div>
+        <div class="gap-item"><span class="gap-icon needs">&#10007;</span> Extraction P&amp;IDs not yet complete</div>
+        <div class="gap-item"><span class="gap-icon needs">&#10007;</span> Equipment design basis not formally documented</div>
+      </div>
+      <div class="ch-sources"><strong>Source Data:</strong> SDS Library, Extraction/Isolation Equipment folders, Engineering Sets, P&amp;ID Drawings</div>
+    </div>
+
+    <!-- CH3 Process Hazard Analysis -->
+    <div class="chapter-card critical">
+      <div class="ch-header">
+        <div><div class="ch-num">GVB-PSM-003</div></div>
+        <div class="ch-severity sev-critical">CRITICAL</div>
+      </div>
+      <div class="ch-title">Ch 3: Process Hazard Analysis</div>
+      <div class="ch-bar-wrap">
+        <div class="ch-bar-track"><div class="ch-bar-fill" style="width:10%"></div></div>
+        <div class="ch-bar-pct">10%</div>
+      </div>
+      <div class="ch-details">
+        <div class="gap-item"><span class="gap-icon has">&#10003;</span> Framework chapter written (GVB-PSM-003)</div>
+        <div class="gap-item"><span class="gap-icon needs">&#10007;</span> NO PHA/HAZOP has been conducted for any process</div>
+        <div class="gap-item"><span class="gap-icon needs">&#10007;</span> No What-If analysis for Extraction</div>
+        <div class="gap-item"><span class="gap-icon needs">&#10007;</span> No HAZOP worksheets for Isolation</div>
+        <div class="gap-item"><span class="gap-icon needs">&#10007;</span> No risk ranking matrix applied</div>
+        <div class="gap-item"><span class="gap-icon needs">&#10007;</span> No PHA team roster or facilitation scheduled</div>
+      </div>
+      <div class="ch-sources"><strong>Source Data:</strong> PHA folder (empty), Jensen Hughes reports, P&amp;IDs (Isolation only)</div>
+    </div>
+
+    <!-- CH4 Operating Procedures -->
+    <div class="chapter-card high">
+      <div class="ch-header">
+        <div><div class="ch-num">GVB-PSM-004</div></div>
+        <div class="ch-severity sev-high">HIGH</div>
+      </div>
+      <div class="ch-title">Ch 4: Operating Procedures</div>
+      <div class="ch-bar-wrap">
+        <div class="ch-bar-track"><div class="ch-bar-fill" style="width:20%"></div></div>
+        <div class="ch-bar-pct">20%</div>
+      </div>
+      <div class="ch-details">
+        <div class="gap-item"><span class="gap-icon has">&#10003;</span> Some SOPs exist in Safety Drive (drafts + complete)</div>
+        <div class="gap-item"><span class="gap-icon has">&#10003;</span> Niko's SOP documentation outline started</div>
+        <div class="gap-item"><span class="gap-icon needs">&#10007;</span> No PSM-compliant operating procedures per 1910.119(f)</div>
+        <div class="gap-item"><span class="gap-icon needs">&#10007;</span> Missing startup/shutdown/emergency sequences</div>
+        <div class="gap-item"><span class="gap-icon needs">&#10007;</span> No documented safe operating limits</div>
+        <div class="gap-item"><span class="gap-icon needs">&#10007;</span> Annual certification of procedures not established</div>
+      </div>
+      <div class="ch-sources"><strong>Source Data:</strong> SOPs folder (drafts/complete), Niko's Drive/sops, Isolation video walkthrough</div>
+    </div>
+
+    <!-- CH5 Training -->
+    <div class="chapter-card medium">
+      <div class="ch-header">
+        <div><div class="ch-num">GVB-PSM-005</div></div>
+        <div class="ch-severity sev-medium">MEDIUM</div>
+      </div>
+      <div class="ch-title">Ch 5: Training</div>
+      <div class="ch-bar-wrap">
+        <div class="ch-bar-track"><div class="ch-bar-fill" style="width:40%"></div></div>
+        <div class="ch-bar-pct">40%</div>
+      </div>
+      <div class="ch-details">
+        <div class="gap-item"><span class="gap-icon has">&#10003;</span> Safety training records exist (2024-2025)</div>
+        <div class="gap-item"><span class="gap-icon has">&#10003;</span> Safety meeting sign-in sheets maintained</div>
+        <div class="gap-item"><span class="gap-icon has">&#10003;</span> Training materials in QT9 system</div>
+        <div class="gap-item"><span class="gap-icon needs">&#10007;</span> No PSM-specific training curriculum</div>
+        <div class="gap-item"><span class="gap-icon needs">&#10007;</span> No competency verification for process operators</div>
+        <div class="gap-item"><span class="gap-icon needs">&#10007;</span> Refresher training schedule not formalized</div>
+      </div>
+      <div class="ch-sources"><strong>Source Data:</strong> Training folder, Safety Trainings 2024, Safety Plans &amp; Training, Isolation Competency</div>
+    </div>
+
+    <!-- CH6 Contractors -->
+    <div class="chapter-card high">
+      <div class="ch-header">
+        <div><div class="ch-num">GVB-PSM-006</div></div>
+        <div class="ch-severity sev-high">HIGH</div>
+      </div>
+      <div class="ch-title">Ch 6: Contractors</div>
+      <div class="ch-bar-wrap">
+        <div class="ch-bar-track"><div class="ch-bar-fill" style="width:15%"></div></div>
+        <div class="ch-bar-pct">15%</div>
+      </div>
+      <div class="ch-details">
+        <div class="gap-item"><span class="gap-icon has">&#10003;</span> Framework chapter written (GVB-PSM-006)</div>
+        <div class="gap-item"><span class="gap-icon needs">&#10007;</span> No contractor pre-qualification procedure</div>
+        <div class="gap-item"><span class="gap-icon needs">&#10007;</span> No contractor safety orientation for PSM areas</div>
+        <div class="gap-item"><span class="gap-icon needs">&#10007;</span> No contractor performance evaluation system</div>
+        <div class="gap-item"><span class="gap-icon needs">&#10007;</span> No injury/illness log for contract employees</div>
+      </div>
+      <div class="ch-sources"><strong>Source Data:</strong> Vendor files, Jensen Hughes contract docs</div>
+    </div>
+
+    <!-- CH7 PSSR -->
+    <div class="chapter-card high">
+      <div class="ch-header">
+        <div><div class="ch-num">GVB-PSM-007</div></div>
+        <div class="ch-severity sev-high">HIGH</div>
+      </div>
+      <div class="ch-title">Ch 7: Pre-Startup Safety Review</div>
+      <div class="ch-bar-wrap">
+        <div class="ch-bar-track"><div class="ch-bar-fill" style="width:15%"></div></div>
+        <div class="ch-bar-pct">15%</div>
+      </div>
+      <div class="ch-details">
+        <div class="gap-item"><span class="gap-icon has">&#10003;</span> Framework chapter written (GVB-PSM-007)</div>
+        <div class="gap-item"><span class="gap-icon has">&#10003;</span> PSSR folder exists in Safety Drive PSM</div>
+        <div class="gap-item"><span class="gap-icon needs">&#10007;</span> No PSSR checklist forms developed</div>
+        <div class="gap-item"><span class="gap-icon needs">&#10007;</span> No documented PSSRs for existing equipment</div>
+        <div class="gap-item"><span class="gap-icon needs">&#10007;</span> No PSSR tracking/close-out system</div>
+      </div>
+      <div class="ch-sources"><strong>Source Data:</strong> PSSR folder (Safety Drive/PSM), Engineering sets</div>
+    </div>
+
+    <!-- CH8 Mechanical Integrity -->
+    <div class="chapter-card high">
+      <div class="ch-header">
+        <div><div class="ch-num">GVB-PSM-008</div></div>
+        <div class="ch-severity sev-high">HIGH</div>
+      </div>
+      <div class="ch-title">Ch 8: Mechanical Integrity</div>
+      <div class="ch-bar-wrap">
+        <div class="ch-bar-track"><div class="ch-bar-fill" style="width:30%"></div></div>
+        <div class="ch-bar-pct">30%</div>
+      </div>
+      <div class="ch-details">
+        <div class="gap-item"><span class="gap-icon has">&#10003;</span> Equipment manuals on file for most equipment</div>
+        <div class="gap-item"><span class="gap-icon has">&#10003;</span> Some inspection pictures documented</div>
+        <div class="gap-item"><span class="gap-icon has">&#10003;</span> Work order system referenced</div>
+        <div class="gap-item"><span class="gap-icon needs">&#10007;</span> No formal PM schedule for PSM-critical equipment</div>
+        <div class="gap-item"><span class="gap-icon needs">&#10007;</span> No inspection/test procedures written</div>
+        <div class="gap-item"><span class="gap-icon needs">&#10007;</span> No deficiency tracking and resolution system</div>
+        <div class="gap-item"><span class="gap-icon needs">&#10007;</span> No quality assurance for spare parts</div>
+      </div>
+      <div class="ch-sources"><strong>Source Data:</strong> Equipment folders (Extraction + Isolation), Inspection Pictures, Work Order Info</div>
+    </div>
+
+    <!-- CH9 Hot Work -->
+    <div class="chapter-card medium">
+      <div class="ch-header">
+        <div><div class="ch-num">GVB-PSM-009</div></div>
+        <div class="ch-severity sev-medium">MEDIUM</div>
+      </div>
+      <div class="ch-title">Ch 9: Hot Work Permit</div>
+      <div class="ch-bar-wrap">
+        <div class="ch-bar-track"><div class="ch-bar-fill" style="width:40%"></div></div>
+        <div class="ch-bar-pct">40%</div>
+      </div>
+      <div class="ch-details">
+        <div class="gap-item"><span class="gap-icon has">&#10003;</span> Hot work folder exists with some documentation</div>
+        <div class="gap-item"><span class="gap-icon has">&#10003;</span> Fire watch awareness from Halotron training</div>
+        <div class="gap-item"><span class="gap-icon needs">&#10007;</span> Permit form needs PSM-specific fields</div>
+        <div class="gap-item"><span class="gap-icon needs">&#10007;</span> No LEL monitoring requirement documented</div>
+        <div class="gap-item"><span class="gap-icon needs">&#10007;</span> 50-ft exclusion zone procedures not formalized</div>
+      </div>
+      <div class="ch-sources"><strong>Source Data:</strong> Hot Work folder (EHS Policies), Halotron Training records</div>
+    </div>
+
+    <!-- CH10 MOC -->
+    <div class="chapter-card medium">
+      <div class="ch-header">
+        <div><div class="ch-num">GVB-PSM-010</div></div>
+        <div class="ch-severity sev-medium">MEDIUM</div>
+      </div>
+      <div class="ch-title">Ch 10: Management of Change</div>
+      <div class="ch-bar-wrap">
+        <div class="ch-bar-track"><div class="ch-bar-fill" style="width:20%"></div></div>
+        <div class="ch-bar-pct">20%</div>
+      </div>
+      <div class="ch-details">
+        <div class="gap-item"><span class="gap-icon has">&#10003;</span> Framework chapter written (GVB-PSM-010)</div>
+        <div class="gap-item"><span class="gap-icon has">&#10003;</span> Engineering change history exists (archive folders)</div>
+        <div class="gap-item"><span class="gap-icon needs">&#10007;</span> No MOC form or request workflow</div>
+        <div class="gap-item"><span class="gap-icon needs">&#10007;</span> No hazard review process for changes</div>
+        <div class="gap-item"><span class="gap-icon needs">&#10007;</span> No update triggers for PSI, procedures, training</div>
+      </div>
+      <div class="ch-sources"><strong>Source Data:</strong> PSM Program Updates folder, Engineering set archives</div>
+    </div>
+
+    <!-- CH11 Incident Investigation -->
+    <div class="chapter-card medium">
+      <div class="ch-header">
+        <div><div class="ch-num">GVB-PSM-011</div></div>
+        <div class="ch-severity sev-medium">MEDIUM</div>
+      </div>
+      <div class="ch-title">Ch 11: Incident Investigation</div>
+      <div class="ch-bar-wrap">
+        <div class="ch-bar-track"><div class="ch-bar-fill" style="width:35%"></div></div>
+        <div class="ch-bar-pct">35%</div>
+      </div>
+      <div class="ch-details">
+        <div class="gap-item"><span class="gap-icon has">&#10003;</span> Incident records exist (Niko's Drive, OSHA 300 logs)</div>
+        <div class="gap-item"><span class="gap-icon has">&#10003;</span> 2025 citation from centrifuge event documented</div>
+        <div class="gap-item"><span class="gap-icon has">&#10003;</span> Safety incidents folder maintained</div>
+        <div class="gap-item"><span class="gap-icon needs">&#10007;</span> No formal root cause analysis methodology</div>
+        <div class="gap-item"><span class="gap-icon needs">&#10007;</span> No corrective action tracking system</div>
+        <div class="gap-item"><span class="gap-icon needs">&#10007;</span> No 48-hour investigation initiation procedure</div>
+      </div>
+      <div class="ch-sources"><strong>Source Data:</strong> OSHA 300 Logs, Safety Incidents, incidents 2024, 2025 Citation</div>
+    </div>
+
+    <!-- CH12 Emergency Planning -->
+    <div class="chapter-card low">
+      <div class="ch-header">
+        <div><div class="ch-num">GVB-PSM-012</div></div>
+        <div class="ch-severity sev-low">LOW</div>
+      </div>
+      <div class="ch-title">Ch 12: Emergency Planning &amp; Response</div>
+      <div class="ch-bar-wrap">
+        <div class="ch-bar-track"><div class="ch-bar-fill" style="width:65%"></div></div>
+        <div class="ch-bar-pct">65%</div>
+      </div>
+      <div class="ch-details">
+        <div class="gap-item"><span class="gap-icon has">&#10003;</span> Evacuation maps created (master + archive versions)</div>
+        <div class="gap-item"><span class="gap-icon has">&#10003;</span> Fire extinguisher locations documented (46 units)</div>
+        <div class="gap-item"><span class="gap-icon has">&#10003;</span> AED/First Aid locations mapped</div>
+        <div class="gap-item"><span class="gap-icon has">&#10003;</span> Gas detection systems installed (heptane + ethanol sensors)</div>
+        <div class="gap-item"><span class="gap-icon has">&#10003;</span> HazMat trailer and spill response resources on-site</div>
+        <div class="gap-item"><span class="gap-icon needs">&#10007;</span> Emergency drill schedule and records need formalization</div>
+        <div class="gap-item"><span class="gap-icon needs">&#10007;</span> External responder coordination plan needs update</div>
+      </div>
+      <div class="ch-sources"><strong>Source Data:</strong> Evacuation maps, Fire Extinguisher Locations, FA AED Locations, Gas Detection, HazMat trailer, SPCC and Spills</div>
+    </div>
+
+    <!-- CH13 Compliance Audits -->
+    <div class="chapter-card medium">
+      <div class="ch-header">
+        <div><div class="ch-num">GVB-PSM-013</div></div>
+        <div class="ch-severity sev-medium">MEDIUM</div>
+      </div>
+      <div class="ch-title">Ch 13: Compliance Audits</div>
+      <div class="ch-bar-wrap">
+        <div class="ch-bar-track"><div class="ch-bar-fill" style="width:30%"></div></div>
+        <div class="ch-bar-pct">30%</div>
+      </div>
+      <div class="ch-details">
+        <div class="gap-item"><span class="gap-icon has">&#10003;</span> QT9 quality management system in place (ISO 9001:2015)</div>
+        <div class="gap-item"><span class="gap-icon has">&#10003;</span> OSHA consultation reports serve as baseline audits</div>
+        <div class="gap-item"><span class="gap-icon has">&#10003;</span> Gap analysis folder exists</div>
+        <div class="gap-item"><span class="gap-icon needs">&#10007;</span> No PSM-specific audit protocol or checklist</div>
+        <div class="gap-item"><span class="gap-icon needs">&#10007;</span> No 3-year audit schedule established</div>
+        <div class="gap-item"><span class="gap-icon needs">&#10007;</span> No corrective action tracking from audits</div>
+      </div>
+      <div class="ch-sources"><strong>Source Data:</strong> QT9 records, OSHA Consultation 2024, Gap Analysis folder, SHARP program</div>
+    </div>
+
+    <!-- CH14 Trade Secrets -->
+    <div class="chapter-card low">
+      <div class="ch-header">
+        <div><div class="ch-num">GVB-PSM-014</div></div>
+        <div class="ch-severity sev-low">LOW</div>
+      </div>
+      <div class="ch-title">Ch 14: Trade Secrets</div>
+      <div class="ch-bar-wrap">
+        <div class="ch-bar-track"><div class="ch-bar-fill" style="width:70%"></div></div>
+        <div class="ch-bar-pct">70%</div>
+      </div>
+      <div class="ch-details">
+        <div class="gap-item"><span class="gap-icon has">&#10003;</span> GVB policy: chemical identities are NOT trade secrets</div>
+        <div class="gap-item"><span class="gap-icon has">&#10003;</span> SDS accessible to all employees</div>
+        <div class="gap-item"><span class="gap-icon has">&#10003;</span> Process parameters shared with operators</div>
+        <div class="gap-item"><span class="gap-icon needs">&#10007;</span> Confidentiality agreement template needs formalization</div>
+        <div class="gap-item"><span class="gap-icon needs">&#10007;</span> Need documented policy on PSI access vs trade secret claims</div>
+      </div>
+      <div class="ch-sources"><strong>Source Data:</strong> SDS Library, QT9 documentation policies</div>
+    </div>
+
+  </div><!-- end chapter-grid -->
+
+  <!-- PRIORITY TIMELINE -->
+  <div class="timeline-section">
+    <div class="timeline-title">Implementation Priority Timeline</div>
+    <div class="timeline-phases">
+      <div class="phase phase-1">
+        <div class="phase-label">Phase 1 &mdash; Immediate (0-90 Days)</div>
+        <div class="phase-window">April &ndash; June 2026</div>
+        <div class="phase-items">
+          &#9679; Ch 3: Conduct initial PHA (HAZOP for Isolation, What-If for Extraction)<br>
+          &#9679; Ch 4: Develop PSM-compliant operating procedures<br>
+          &#9679; Ch 8: Establish MI inspection schedule for critical equipment<br>
+          &#9679; Ch 1: Implement employee consultation and participation tracking
+        </div>
+      </div>
+      <div class="phase phase-2">
+        <div class="phase-label">Phase 2 &mdash; Near-Term (90-180 Days)</div>
+        <div class="phase-window">July &ndash; September 2026</div>
+        <div class="phase-items">
+          &#9679; Ch 6: Contractor pre-qualification and orientation program<br>
+          &#9679; Ch 7: PSSR checklists and retroactive reviews<br>
+          &#9679; Ch 5: PSM-specific training curriculum and competency testing<br>
+          &#9679; Ch 10: MOC form, workflow, and hazard review process
+        </div>
+      </div>
+      <div class="phase phase-3">
+        <div class="phase-label">Phase 3 &mdash; Sustaining (180-365 Days)</div>
+        <div class="phase-window">October 2026 &ndash; March 2027</div>
+        <div class="phase-items">
+          &#9679; Ch 9: Finalize hot work permit with LEL monitoring requirements<br>
+          &#9679; Ch 11: Root cause analysis methodology and corrective action tracking<br>
+          &#9679; Ch 13: PSM audit protocol and 3-year schedule<br>
+          &#9679; Ch 12: Emergency drill program and external responder coordination<br>
+          &#9679; Ch 14: Finalize confidentiality agreements and access policy<br>
+          &#9679; Ch 2: Complete consolidated PSI register
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- FOOTER -->
+  <div class="footer">
+    GVB Biopharma &bull; Prineville Campus &bull; 1948 N Main Street, Prineville, Oregon 97754<br>
+    PSM Program &mdash; 29 CFR 1910.119 / OR-OSHA Division 2/H &bull; Confidential &mdash; Internal Use Only &bull; April 2, 2026
+  </div>
+
+</div>
+</body>
+</html>
